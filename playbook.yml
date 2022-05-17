@@ -1,0 +1,110 @@
+---
+- hosts: localhost
+  gather_facts: False
+  check_mode: no
+  tasks:
+
+  - name: Add public ip addresses to an dynamic inventory
+    add_host:
+      name: "{{ host }}"
+
+  - name: Wait 900 seconds for port 22 to become open and contain "OpenSSH"
+    wait_for:
+      port: 22
+      host: "{{ host }}"
+      search_regex: OpenSSH
+      timeout: 900
+      sleep: 10
+
+- hosts: all
+  gather_facts: False
+  tasks:
+
+    - name: Install software 
+      become: yes
+      apt:
+        pkg: 
+          - git
+          - build-essential
+          - libssl1.0-dev
+          - libeccodes-dev
+          - nginx
+          - reprepro
+        update_cache: yes
+
+    - name: Git checkout
+      ansible.builtin.git:
+        repo: https://github.com/peervpn/peervpn
+        dest: /home/{{ user }}/peervpn
+
+    - name: Build
+      community.general.make:
+        chdir: /home/{{ user }}/peervpn
+    
+    - name: Create path of binary file in deb
+      ansible.builtin.file:
+        path: /home/{{ user }}/kek_1/usr/local/bin/
+        state: directory
+
+    - name: Create directory DEBIAN 
+      ansible.builtin.file:
+        path: /home/{{ user }}/kek_1/DEBIAN
+        state: directory
+
+    - name: Copy description file to remote machine
+      ansible.builtin.copy:
+        src: control
+        dest: /home/{{ user }}/kek_1/DEBIAN/control
+    
+    - name: Copy binary file
+      ansible.builtin.copy:
+        src: /home/{{ user }}/peervpn/peervpn 
+        dest: /home/{{ user }}/kek_1/usr/local/bin/peervpn
+        remote_src: yes
+
+    - name: Make deb
+      ansible.builtin.shell: dpkg-deb --build kek_1/
+
+    - name: Create repo directory
+      ansible.builtin.file:
+        path: /home/{{ user }}/repo/conf
+        state: directory
+
+    - name: Copy nginx config to remote machine
+      become: yes
+      ansible.builtin.copy:
+        src: default
+        dest: /etc/nginx/sites-enabled/default
+
+    - name: Restart nginx
+      become: yes
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
+
+    - name: Copy repo config to remote machine
+      ansible.builtin.copy:
+        src: distributions
+        dest: /home/{{ user }}/repo/conf/distributions
+          
+    - name: check if file exists
+      stat: 
+        path: /home/{{ user }}/repo/pool/main/p/peervpn/peervpn_0.1_amd64.deb 
+      register: peervpn_exist
+
+    - name: Make repo
+      ansible.builtin.shell: reprepro -b repo/ includedeb bionic kek_1.deb
+      when: peervpn_exist.stat.exists == False
+
+    - name: Add specified repository into sources list
+      become: yes
+      ansible.builtin.apt_repository:
+        repo: deb [trusted=yes] http://localhost bionic main
+        state: present
+        validate_certs: no
+        update_cache: yes
+
+    - name: Install peervpn
+      become: yes
+      apt:
+        name: peervpn

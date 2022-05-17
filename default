@@ -1,0 +1,11 @@
+server {
+	location / {
+		root /home/devops/repo;
+		autoindex on;
+	}
+
+	location /ubuntu/ {
+		root /home/devops/repo;
+		autoindex on;
+	}
+}

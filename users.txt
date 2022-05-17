@@ -1,0 +1,11 @@
+#cloud-config
+datasource:
+  Ec2:
+    strict_id: false
+ssh_pwauth: no
+users:
+- name: devops
+  sudo: ALL=(ALL) NOPASSWD:ALL
+  shell: /bin/bash
+  ssh-authorized-keys:
+    - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDMpU4aITDC8OV0GNy4qPYw07DGqWn5C9fGHTIOzXgLvY65iYh3VRj6p7wxB6B9zQ/o7a0F2NnwoR12t38+XXDxmIiIRJyn654Sq8HJOewVEF7z0grar2Qmvg2vcPm+01Z5bVt6oE3bc2cV2jMAbpW0SkefXMHVxP7y7rFp8jiadYtJOJ8jfSlkizzKYsnk6NsKkclu1ycDNNFn1kkmAmkwTdj4QvtGMmOkzCXL6hbi7NmYuKrM11B44t0E1sEdvdhh4FvQjS0KXMLsJ6ARx7/P6TwgnG92Z07B4Ijo6W1YSQbSejL9SiZxC4T0JMu4uhfQ7uni1wZOSxLJFhea6IowaD0l4XzwLAbVTJxOSRKpvp41uj7AjpWFqp5NEKHCDYDWUUPc3iw/YNN09Vyzw/NbLDVWXXMWXi0g6ln1KXQ9YQr1DcKdNMND8RikghPJaXn2KoNsA75oTj3wpYNQSH0IXR+0XY8KGSL5JqG6tud9dXzf/axxXFxRETtxA+UHr3M= rsa-key-20200323 Kirill Kuchma
